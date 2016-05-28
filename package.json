@@ -1,0 +1,29 @@
+{
+  "name": "lagoon",
+  "version": "0.0.0",
+  "description": "A pretty logger for mocha",
+  "main": "index.js",
+  "author": "Andi Heinkelein <andifeind@noname-media.com>",
+  "license": "MIT",
+  "scripts": {
+    "test": "mocha --reporter lagoon tests/*.spec.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@calypso/~/lagoon.git"
+  },
+  "keywords": [
+    "mocha",
+    "reporter",
+    "lagoon",
+    "test",
+    "testrunner"
+  ],
+  "devDependencies": {
+    "inspect.js": "^0.1.2",
+    "mocha": "^2.5.3"
+  },
+  "dependencies": {
+    "colorfy": "^0.2.0"
+  }
+}
