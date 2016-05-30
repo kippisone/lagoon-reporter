@@ -30,19 +30,25 @@ let pluralize = function(num, sing, plur) {
 
 let humanize = function(hrtime) {
   let t = hrtime[0] * 1e9 + hrtime[1];
+  let timeStr;
+
   if (t < 1e3) {
-    return t + 'ns';
+    timeStr = t + 'ns';
+  }
+  else if (t < 1e6) {
+    timeStr = Math.floor(t / 1e3) + 'μs';
+  }
+  else if (t < 1e9) {
+    timeStr = Math.floor(t / 1e6) + 'ms';
+  }
+  else {
+    timeStr = Math.floor(t / 1e9) + 's';
   }
 
-  if (t < 1e6) {
-    return Math.floor(t / 1e3) + 'μs';
-  }
-
-  if (t < 1e9) {
-    return Math.floor(t / 1e6) + 'ms';
-  }
-
-  return Math.floor(t / 1e9) + 's';
+  return {
+    time: t,
+    toString: () => timeStr
+  };
 }
 
 function LagoonReporter(runner) {
@@ -72,8 +78,29 @@ function LagoonReporter(runner) {
   });
 
   runner.on('pass', function(test) {
+    let duration = process.hrtime(testStart);
+    duration = humanize(duration);
+
     ++passed;
-    cf(indent() + ' ').green('✔').llgrey(test.fullTitle()).print();
+    let log = cf(indent() + ' ').green('✔').llgrey(test.fullTitle());
+
+    log.grey('(', 'rtrim');
+
+    if (duration.time < 1e6) {
+      log.green(duration);
+    }
+    else if (duration.time > 4.9e6) {
+      log.red(duration);
+    }
+    else if (duration.time > 1e7) {
+      log.orange(duration);
+    }
+    else {
+      log.lime(duration);
+    }
+
+    log.grey(')', 'ltrim');
+    log.print();
   });
 
   runner.on('pending', function(test) {
