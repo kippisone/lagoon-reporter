@@ -1,7 +1,7 @@
 {
   "name": "lagoon-reporter",
-  "version": "0.2.0",
-  "description": "Lagoon reporter ===============",
+  "version": "0.1.0",
+  "description": "Lagoon reporter is a pretty reporter for Mocha",
   "main": "lagoon.js",
   "scripts": {
     "test": "mocha --reporter lagoon-reporter tests/*.spec.js"
