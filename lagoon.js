@@ -122,7 +122,7 @@ function LagoonReporter(runner) {
   runner.on('end', function() {
     let runtime = process.hrtime(suiteStart);
 
-    cf().lgrey('\n ✀' + ' –'.repeat(33))
+    cf().lgrey('\n \u2702' + ' –'.repeat(33))
       .txt('\n')
       .green('   ' + passed).grey(pluralize(passed, 'test passed\n', 'tests passed\n'))
       .red('   ' + failed).grey(pluralize(failed, 'test failed\n', 'tests failed\n'))
