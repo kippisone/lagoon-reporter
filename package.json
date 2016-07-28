@@ -4,7 +4,7 @@
   "description": "Lagoon reporter is a pretty reporter for Mocha",
   "main": "lagoon.js",
   "scripts": {
-    "test": "mocha --reporter lagoon-reporter tests/*.spec.js"
+    "test": "mocha --reporter lagoon.js tests/*.spec.js"
   },
   "author": "Andi Heinkelein <andifeind@noname-media.com>",
   "license": "MIT",
@@ -12,9 +12,8 @@
     "test": "tests"
   },
   "dependencies": {
-    "lagoon-reporter": "^0.2.0",
-    "inspect.js": "^0.1.2",
-    "colorfy": "^0.2.0"
+    "colorfy": "^0.2.0",
+    "inspect.js": "1.0.0"
   },
   "devDependencies": {
     "mocha": "^2.5.3"
