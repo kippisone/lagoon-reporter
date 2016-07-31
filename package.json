@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "colorfy": "^0.2.0",
+    "diff": "^2.2.3",
+    "fluf": "^0.1.0",
     "inspect.js": "1.0.0"
   },
   "devDependencies": {
