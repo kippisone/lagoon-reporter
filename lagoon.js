@@ -1,8 +1,63 @@
 'use strict';
 
 let cf = require('colorfy');
+let jsdiff = require('diff');
+let fluf = require('fluf');
 
 let indention = 0;
+
+let stringDiff = function(actual, expected) {
+  let str = cf();
+
+  if (typeof actual === 'object' && typeof expected === 'object') {
+    actual = JSON.stringify(actual, null, '  ');
+    expected = JSON.stringify(expected, null, '  ');
+  }
+
+  let left = fluf(String(actual)).split();
+  let right = fluf(String(expected)).split();
+
+  let indentLeft = Math.max(left.longestItem(), 20);
+  let indentRight = Math.max(right.longestItem(), 20);
+
+  str.green('expected:', 'trim').txt(' '.repeat(indentLeft - 7), 'trim');
+  str.red('actual:', 'trim').txt(' '.repeat(indentRight - 5), 'trim').nl();
+  str.grey('-'.repeat(indentLeft), 'trim').txt('  ', 'trim');
+  str.grey('-'.repeat(indentRight), 'trim').nl(2);
+
+  for (let i = 0; i < Math.max(left.length, right.length); i++) {
+    let diff = jsdiff.diffChars(left.get(i, ''), right.get(i, ''));
+    let lineLength = 0;
+    diff.forEach(part => {
+      if (part.removed) {
+        str.green(part.value, 'trim');
+        lineLength += part.value.length;
+      }
+      else if (!part.added) {
+        str.txt(part.value, 'trim');
+        lineLength += part.value.length;
+      }
+    });
+
+    str.txt(' '.repeat(indentLeft - lineLength + 2), 'trim')
+
+    diff.forEach(part => {
+      if (part.added) {
+        str.red(part.value, 'trim');
+        lineLength += part.value.length;
+      }
+      else if (!part.removed) {
+        str.txt(part.value, 'trim');
+        lineLength += part.value.length;
+      }
+    });
+
+    str.nl();
+  }
+
+  return str;
+}
+
 let indent = function(str) {
   if (str === undefined) {
     return ' '.repeat(indention * 2);
@@ -111,7 +166,11 @@ function LagoonReporter(runner) {
   runner.on('fail', function(test, err) {
     ++failed;
     cf(indent() + ' ').red('✘').grey(test.fullTitle()).txt('\n').print();
-    cf(indent() + '   ').lgrey(err.message).print();
+    cf(indent() + '   ').lgrey(err.message).nl().print();
+    if (err.hasOwnProperty('actual') && err.hasOwnProperty('expected')) {
+      let diffStr = stringDiff(err.actual, err.expected).colorfy();
+      console.log(fluf(diffStr).indent(' ', indention + 6), '\n'); // eslint-disable-line
+    }
   });
 
   runner.on('test', function(test, err) {
@@ -122,7 +181,7 @@ function LagoonReporter(runner) {
   runner.on('end', function() {
     let runtime = process.hrtime(suiteStart);
 
-    cf().lgrey('\n ✀' + ' –'.repeat(33))
+    cf().lgrey('\n \u2702' + ' –'.repeat(33))
       .txt('\n')
       .green('   ' + passed).grey(pluralize(passed, 'test passed\n', 'tests passed\n'))
       .red('   ' + failed).grey(pluralize(failed, 'test failed\n', 'tests failed\n'))
