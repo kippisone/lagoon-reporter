@@ -30,11 +30,11 @@ let stringDiff = function(actual, expected) {
     str.txt('current object', 'bgred').txt('expected object', 'bgazure').nl(2);
     diff = jsdiff.diffChars(JSON.stringify(actual, null, '  '), JSON.stringify(expected, null, '  '));
 
-    diff.forEach(function(line) {
-      let color = line.added ? 'bgred' :
-          line.removed ? 'bgazure' : '';
+    diff.forEach(function(part) {
+      let color = part.added ? 'bgred' :
+          part.removed ? 'bgazure' : '';
 
-      line.value.split('\n').forEach(function(l) {
+      part.value.split('\n').forEach(function(l) {
         str.txt(l, color).nl();
       });
     });
@@ -68,13 +68,33 @@ let stringDiff = function(actual, expected) {
   let indentLeft = left.longestItem();
 
   for (let i = 0; i < Math.max(left.length, right.length); i++) {
-    let strLeft = fluf(left.get(i, ''));
-    strLeft.fill(' ', indentLeft + 2);
+    let strLeft = cf();
 
-    str
-    .red(strLeft)
-    .green(right.get(i))
-    .nl()
+    let diff = jsdiff.diffChars(left.get(i, ''), right.get(i, ''));
+    let lineLength = 0;
+    diff.forEach(part => {
+      if (part.removed) {
+        str.green(part.value, 'trim');
+        lineLength += part.value.length;
+      }
+      else if (!part.added) {
+        str.txt(part.value, 'trim');
+        lineLength += part.value.length;
+      }
+    });
+
+    str.txt(' '.repeat(indentLeft - lineLength + 2))
+
+    diff.forEach(part => {
+      if (part.added) {
+        str.red(part.value, 'trim');
+        lineLength += part.value.length;
+      }
+      else if (!part.removed) {
+        str.txt(part.value, 'trim');
+        lineLength += part.value.length;
+      }
+    });
   }
 
   return str;
