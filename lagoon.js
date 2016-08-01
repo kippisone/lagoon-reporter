@@ -7,69 +7,25 @@ let fluf = require('fluf');
 let indention = 0;
 
 let stringDiff = function(actual, expected) {
-  let diff = [];
   let str = cf();
 
-  // if (typeof actual === 'object') {
-  //   actual = JSON.stringify(actual, null, '  ');
-  // }
-  //
-  // if (typeof expected === 'object') {
-  //   expected = JSON.stringify(expected, null, '  ');
-  // }
-
-  // if (typeof actual === 'string') {
-  //     actual = actual.replace(/\n/g, '↵');
-  // }
-
-  // if (typeof expected === 'string') {
-  //     expected = expected.replace(/\n/g, '↵');
-  // }
-
   if (typeof actual === 'object' && typeof expected === 'object') {
-    str.txt('current object', 'bgred').txt('expected object', 'bgazure').nl(2);
-    diff = jsdiff.diffChars(JSON.stringify(actual, null, '  '), JSON.stringify(expected, null, '  '));
-
-    diff.forEach(function(part) {
-      let color = part.added ? 'bgred' :
-          part.removed ? 'bgazure' : '';
-
-      part.value.split('\n').forEach(function(l) {
-        str.txt(l, color).nl();
-      });
-    });
-
-    return str;
+    actual = JSON.stringify(actual, null, '  ');
+    expected = JSON.stringify(expected, null, '  ');
   }
-
-  // if (typeof actual === 'string' && typeof expected === 'string') {
-  //     str = colorLeft('current string') + ' ' + colorRight('expected string') + '\n\n';
-  //     diff = jsdiff.diffLines(actual, expected);
-  // }
-
-  // if (typeof actual === 'number' && typeof expected === 'number') {
-  //     str = colorLeft('current number: ' + actual) + ' ' + colorRight('expected number: ' + expected) + '\n\n';
-  // }
-
-  // if (!noDiff) {
-  //     diff.forEach(function(line) {
-  //         let color = line.added ? colorRight :
-  //             line.removed ? colorLeft : clc.whiteBright;
-
-  //         str += line.value.split('\n').map(function(l) {
-  //             return color(l) + '\n';
-  //         }).join('\n');
-  //     });
-  // }
 
   let left = fluf(String(actual)).split();
   let right = fluf(String(expected)).split();
 
-  let indentLeft = left.longestItem();
+  let indentLeft = Math.max(left.longestItem(), 20);
+  let indentRight = Math.max(right.longestItem(), 20);
+
+  str.green('expected:', 'trim').txt(' '.repeat(indentLeft - 7), 'trim');
+  str.red('actual:', 'trim').txt(' '.repeat(indentRight - 5), 'trim').nl();
+  str.grey('-'.repeat(indentLeft), 'trim').txt('  ', 'trim');
+  str.grey('-'.repeat(indentRight), 'trim').nl(2);
 
   for (let i = 0; i < Math.max(left.length, right.length); i++) {
-    let strLeft = cf();
-
     let diff = jsdiff.diffChars(left.get(i, ''), right.get(i, ''));
     let lineLength = 0;
     diff.forEach(part => {
@@ -83,7 +39,7 @@ let stringDiff = function(actual, expected) {
       }
     });
 
-    str.txt(' '.repeat(indentLeft - lineLength + 2))
+    str.txt(' '.repeat(indentLeft - lineLength + 2), 'trim')
 
     diff.forEach(part => {
       if (part.added) {
@@ -95,6 +51,8 @@ let stringDiff = function(actual, expected) {
         lineLength += part.value.length;
       }
     });
+
+    str.nl();
   }
 
   return str;
@@ -208,10 +166,10 @@ function LagoonReporter(runner) {
   runner.on('fail', function(test, err) {
     ++failed;
     cf(indent() + ' ').red('✘').grey(test.fullTitle()).txt('\n').print();
-    cf(indent() + '   ').lgrey(err.message).print();
+    cf(indent() + '   ').lgrey(err.message).nl().print();
     if (err.hasOwnProperty('actual') && err.hasOwnProperty('expected')) {
       let diffStr = stringDiff(err.actual, err.expected).colorfy();
-      console.log(fluf(diffStr).indent(' ', indention + 6)); // eslint-disable-line
+      console.log(fluf(diffStr).indent(' ', indention + 6), '\n'); // eslint-disable-line
     }
   });
 
