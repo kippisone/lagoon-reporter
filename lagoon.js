@@ -9,8 +9,11 @@ let indention = 0;
 let stringDiff = function(actual, expected) {
   let str = cf();
 
-  if (typeof actual === 'object' && typeof expected === 'object') {
+  if (typeof actual === 'object' && actual !== null) {
     actual = JSON.stringify(actual, null, '  ');
+  }
+
+  if (typeof expected === 'object' && expected !== null) {
     expected = JSON.stringify(expected, null, '  ');
   }
 
