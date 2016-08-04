@@ -23,8 +23,8 @@ let stringDiff = function(actual, expected) {
   let indentLeft = Math.max(left.longestItem(), 20);
   let indentRight = Math.max(right.longestItem(), 20);
 
-  str.green('expected:', 'trim').txt(' '.repeat(indentLeft - 7), 'trim');
-  str.red('actual:', 'trim').txt(' '.repeat(indentRight - 5), 'trim').nl();
+  str.red('actual:', 'trim').txt(' '.repeat(indentLeft - 5), 'trim');
+  str.green('expected:', 'trim').txt(' '.repeat(indentRight - 7), 'trim').nl();
   str.grey('-'.repeat(indentLeft), 'trim').txt('  ', 'trim');
   str.grey('-'.repeat(indentRight), 'trim').nl(2);
 
@@ -33,7 +33,7 @@ let stringDiff = function(actual, expected) {
     let lineLength = 0;
     diff.forEach(part => {
       if (part.removed) {
-        str.green(part.value, 'trim');
+        str.red(part.value, 'trim');
         lineLength += part.value.length;
       }
       else if (!part.added) {
@@ -46,7 +46,7 @@ let stringDiff = function(actual, expected) {
 
     diff.forEach(part => {
       if (part.added) {
-        str.red(part.value, 'trim');
+        str.green(part.value, 'trim');
         lineLength += part.value.length;
       }
       else if (!part.removed) {
@@ -109,6 +109,19 @@ let humanize = function(hrtime) {
   };
 }
 
+let highlightErrorMessage = function(err)  {
+  let msg = fluf(err.stack || err).split();
+  let str = cf();
+
+  let errorMsg = msg.__items.shift();
+  str.red(errorMsg).txt('\n');
+  msg.forEach(line => {
+    str.grey(line).txt('\n');
+  });
+
+  return str;
+}
+
 function LagoonReporter(runner) {
   let passed = 0;
   let failed = 0;
@@ -169,17 +182,16 @@ function LagoonReporter(runner) {
   runner.on('fail', function(test, err) {
     ++failed;
     cf(indent() + ' ').red('✘').grey(test.fullTitle()).txt('\n').print();
-    cf(indent() + '   ').lgrey(err.message).nl().print();
+    highlightErrorMessage(err).print();
     if (err.hasOwnProperty('actual') && err.hasOwnProperty('expected')) {
       let diffStr = stringDiff(err.actual, err.expected).colorfy();
       console.log(fluf(diffStr).indent(' ', indention + 6), '\n'); // eslint-disable-line
     }
   });
 
-  runner.on('test', function(test, err) {
+  runner.on('test', function(test) {
     testStart = process.hrtime();
   });
-
 
   runner.on('end', function() {
     let runtime = process.hrtime(suiteStart);
