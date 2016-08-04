@@ -109,6 +109,19 @@ let humanize = function(hrtime) {
   };
 }
 
+let highlightErrorMessage = function(err)  {
+  let msg = fluf(err.stack).split();
+  let str = cf();
+
+  let errorMsg = msg.__items.shift();
+  str.red(errorMsg).txt('\n');
+  msg.forEach(line => {
+    str.grey(line).txt('\n');
+  });
+
+  return str;
+}
+
 function LagoonReporter(runner) {
   let passed = 0;
   let failed = 0;
@@ -169,7 +182,7 @@ function LagoonReporter(runner) {
   runner.on('fail', function(test, err) {
     ++failed;
     cf(indent() + ' ').red('✘').grey(test.fullTitle()).txt('\n').print();
-    cf(indent() + '   ').lgrey(err.message).nl().print();
+    highlightErrorMessage(err).print();
     if (err.hasOwnProperty('actual') && err.hasOwnProperty('expected')) {
       let diffStr = stringDiff(err.actual, err.expected).colorfy();
       console.log(fluf(diffStr).indent(' ', indention + 6), '\n'); // eslint-disable-line
@@ -180,8 +193,7 @@ function LagoonReporter(runner) {
     testStart = process.hrtime();
   });
 
-
-  runner.on('end', function() {
+  runner.on('end', function(err) {
     let runtime = process.hrtime(suiteStart);
 
     cf().lgrey('\n \u2702' + ' –'.repeat(33))
