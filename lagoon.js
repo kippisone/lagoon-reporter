@@ -206,7 +206,8 @@ function LagoonReporter(runner) {
       .azure('   ' + skiped).grey(pluralize(skiped, 'test skipped\n', 'tests skipped\n\n'));
 
     if (sharedState.has('counter')) {
-      str.lime('   ' + sharedState.get('counter')).grey('inspections\n')
+      str.lime('   ' + sharedState.get('counter')).grey('inspections\n');
+      sharedState.set('counter', 0);
     }
 
     str.llgrey('\n   All tests have been done in').green(humanize(runtime))
