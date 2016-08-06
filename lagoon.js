@@ -3,6 +3,7 @@
 let cf = require('colorfy');
 let jsdiff = require('diff');
 let fluf = require('fluf');
+let superstorage = require('superstorage');
 
 let indention = 0;
 
@@ -110,7 +111,7 @@ let humanize = function(hrtime) {
 }
 
 let highlightErrorMessage = function(err)  {
-  let msg = fluf(err.stack || err).split();
+  let msg = fluf(err.stack || err.message || String(err)).split();
   let str = cf();
 
   let errorMsg = msg.__items.shift();
@@ -195,13 +196,20 @@ function LagoonReporter(runner) {
 
   runner.on('end', function() {
     let runtime = process.hrtime(suiteStart);
+    let str = cf();
+    let sharedState = superstorage('inspectjs-shared-state');
 
-    cf().lgrey('\n \u2702' + ' –'.repeat(33))
+    str.lgrey('\n \u2702' + ' –'.repeat(33))
       .txt('\n')
       .green('   ' + passed).grey(pluralize(passed, 'test passed\n', 'tests passed\n'))
       .red('   ' + failed).grey(pluralize(failed, 'test failed\n', 'tests failed\n'))
-      .azure('   ' + skiped).grey(pluralize(skiped, 'test skipped\n', 'tests skipped\n'))
-      .llgrey('\n   All tests have been done in').green(humanize(runtime))
+      .azure('   ' + skiped).grey(pluralize(skiped, 'test skipped\n', 'tests skipped\n\n'));
+
+    if (sharedState.has('counter')) {
+      str.lime('   ' + sharedState.get('counter')).grey('inspections\n')
+    }
+
+    str.llgrey('\n   All tests have been done in').green(humanize(runtime))
       .txt('\n\n')
       .print();
 
