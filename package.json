@@ -15,7 +15,8 @@
     "colorfy": "0.3.1",
     "diff": "^2.2.3",
     "fluf": "0.2.0",
-    "inspect.js": "1.2.0"
+    "inspect.js": "1.2.0",
+    "superstorage": "^0.1.0"
   },
   "devDependencies": {
     "mocha": "3.0.1"
