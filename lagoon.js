@@ -159,6 +159,16 @@ let highlightErrorMessage = function(err)  {
   let errorMsg = msg.__items.shift();
   str.red(errorMsg).txt('\n');
   msg.forEach(line => {
+    if (/^\s*at/.test(line)) {
+      line = line.split(/\((.+)\)$/).forEach(match => {
+        if (/(\.spec\.js)|((Test|Spec)\.js)$/.test(match)) {
+          return str.grey('(').lime(match, 'trim').grey(')');
+        }
+
+        return str.grey(match);
+      });
+    }
+
     str.grey(line).txt('\n');
   });
 
