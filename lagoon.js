@@ -62,6 +62,48 @@ let stringDiff = function(actual, expected) {
   return str;
 }
 
+let oneToMultiDiff = function(actual, expected) {
+  let str = cf();
+
+  actual = actual.map(item => {
+    if (typeof item === 'object' && item !== null) {
+      item = JSON.stringify(item, null, '  ').replace(/\\"/g, '"');
+    }
+
+    return item;
+  });
+
+  if (typeof expected === 'object' && expected !== null) {
+    expected = JSON.stringify(expected, null, '  ').replace(/\\"/g, '"');
+  }
+
+  str.green('expected:', 'trim').nl();
+  str.grey('-'.repeat(80)).txt('  ', 'trim').nl();
+  str.txt(expected).nl(2);
+
+  str.red('actual:', 'trim').nl();
+  str.grey('-'.repeat(80)).txt('  ', 'trim').nl();
+
+  actual.forEach(call => {
+    let diff = jsdiff.diffWords(expected, call);
+      diff.forEach(part => {
+        if (part.removed) {
+          str.red(part.value, 'trim');
+        }
+        else if (part.added) {
+          str.green(part.value, 'trim');
+        }
+        else {
+          str.txt(part.value, 'trim');
+        }
+      });
+
+      str.nl(2);
+  });
+
+  return str;
+}
+
 let indent = function(str) {
   if (str === undefined) {
     return ' '.repeat(indention * 2);
@@ -184,8 +226,18 @@ function LagoonReporter(runner) {
     ++failed;
     cf(indent() + ' ').red('✘').grey(test.fullTitle()).txt('\n').print();
     highlightErrorMessage(err).print();
-    if (err.hasOwnProperty('actual') && err.hasOwnProperty('expected')) {
-      let diffStr = stringDiff(err.actual, err.expected).colorfy();
+
+    let diffStr;
+    if (err.diffMode) {
+      if (err.diffMode === 'one-to-n') {
+        diffStr = oneToMultiDiff(err.actual, err.expected).colorfy();
+      }
+    }
+    else if (err.hasOwnProperty('actual') && err.hasOwnProperty('expected')) {
+      diffStr = stringDiff(err.actual, err.expected).colorfy();
+    }
+
+    if (diffStr) {
       console.log(fluf(diffStr).indent(' ', indention + 6), '\n'); // eslint-disable-line
     }
   });
