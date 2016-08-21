@@ -4,6 +4,7 @@ let cf = require('colorfy');
 let jsdiff = require('diff');
 let fluf = require('fluf');
 let superstorage = require('superstorage');
+let sortify = require('json.sortify');
 
 let indention = 0;
 
@@ -11,11 +12,11 @@ let stringDiff = function(actual, expected) {
   let str = cf();
 
   if (typeof actual === 'object' && actual !== null) {
-    actual = JSON.stringify(actual, null, '  ');
+    actual = sortify(actual, null, '  ');
   }
 
   if (typeof expected === 'object' && expected !== null) {
-    expected = JSON.stringify(expected, null, '  ');
+    expected = sortify(expected, null, '  ');
   }
 
   let left = fluf(String(actual)).split();
@@ -67,14 +68,14 @@ let oneToMultiDiff = function(actual, expected) {
 
   actual = actual.map(item => {
     if (typeof item === 'object' && item !== null) {
-      item = JSON.stringify(item, null, '  ').replace(/\\"/g, '"');
+      item = sortify(item, null, '  ').replace(/\\"/g, '"');
     }
 
     return item;
   });
 
   if (typeof expected === 'object' && expected !== null) {
-    expected = JSON.stringify(expected, null, '  ').replace(/\\"/g, '"');
+    expected = sortify(expected, null, '  ').replace(/\\"/g, '"');
   }
 
   str.green('expected:', 'trim').nl();
