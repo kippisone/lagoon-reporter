@@ -4,6 +4,7 @@ let cf = require('colorfy');
 let jsdiff = require('diff');
 let fluf = require('fluf');
 let superstorage = require('superstorage');
+let sortify = require('json.sortify');
 
 let indention = 0;
 
@@ -11,11 +12,11 @@ let stringDiff = function(actual, expected) {
   let str = cf();
 
   if (typeof actual === 'object' && actual !== null) {
-    actual = JSON.stringify(actual, null, '  ');
+    actual = sortify(actual, null, '  ');
   }
 
   if (typeof expected === 'object' && expected !== null) {
-    expected = JSON.stringify(expected, null, '  ');
+    expected = sortify(expected, null, '  ');
   }
 
   let left = fluf(String(actual)).split();
@@ -58,6 +59,48 @@ let stringDiff = function(actual, expected) {
 
     str.nl();
   }
+
+  return str;
+}
+
+let oneToMultiDiff = function(actual, expected) {
+  let str = cf();
+
+  actual = actual.map(item => {
+    if (typeof item === 'object' && item !== null) {
+      item = sortify(item, null, '  ').replace(/\\"/g, '"');
+    }
+
+    return item;
+  });
+
+  if (typeof expected === 'object' && expected !== null) {
+    expected = sortify(expected, null, '  ').replace(/\\"/g, '"');
+  }
+
+  str.green('expected:', 'trim').nl();
+  str.grey('-'.repeat(80)).txt('  ', 'trim').nl();
+  str.txt(expected).nl(2);
+
+  str.red('actual:', 'trim').nl();
+  str.grey('-'.repeat(80)).txt('  ', 'trim').nl();
+
+  actual.forEach(call => {
+    let diff = jsdiff.diffWords(expected, call);
+      diff.forEach(part => {
+        if (part.removed) {
+          str.red(part.value, 'trim');
+        }
+        else if (part.added) {
+          str.green(part.value, 'trim');
+        }
+        else {
+          str.txt(part.value, 'trim');
+        }
+      });
+
+      str.nl(2);
+  });
 
   return str;
 }
@@ -117,6 +160,16 @@ let highlightErrorMessage = function(err)  {
   let errorMsg = msg.__items.shift();
   str.red(errorMsg).txt('\n');
   msg.forEach(line => {
+    if (/^\s*at/.test(line)) {
+      line = line.split(/\((.+)\)$/).forEach(match => {
+        if (/(\.spec\.js)|((Test|Spec)\.js)$/.test(match)) {
+          return str.grey('(').lime(match, 'trim').grey(')');
+        }
+
+        return str.grey(match);
+      });
+    }
+
     str.grey(line).txt('\n');
   });
 
@@ -184,8 +237,18 @@ function LagoonReporter(runner) {
     ++failed;
     cf(indent() + ' ').red('✘').grey(test.fullTitle()).txt('\n').print();
     highlightErrorMessage(err).print();
-    if (err.hasOwnProperty('actual') && err.hasOwnProperty('expected')) {
-      let diffStr = stringDiff(err.actual, err.expected).colorfy();
+
+    let diffStr;
+    if (err.diffMode) {
+      if (err.diffMode === 'one-to-n') {
+        diffStr = oneToMultiDiff(err.actual, err.expected).colorfy();
+      }
+    }
+    else if (err.hasOwnProperty('actual') && err.hasOwnProperty('expected')) {
+      diffStr = stringDiff(err.actual, err.expected).colorfy();
+    }
+
+    if (diffStr) {
       console.log(fluf(diffStr).indent(' ', indention + 6), '\n'); // eslint-disable-line
     }
   });
@@ -206,7 +269,8 @@ function LagoonReporter(runner) {
       .azure('   ' + skiped).grey(pluralize(skiped, 'test skipped\n', 'tests skipped\n\n'));
 
     if (sharedState.has('counter')) {
-      str.lime('   ' + sharedState.get('counter')).grey('inspections\n')
+      str.lime('   ' + sharedState.get('counter')).grey('inspections\n');
+      sharedState.set('counter', 0);
     }
 
     str.llgrey('\n   All tests have been done in').green(humanize(runtime))
