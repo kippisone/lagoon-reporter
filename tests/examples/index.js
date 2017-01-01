@@ -4,15 +4,15 @@ let inspect = require('inspect.js');
 
 describe('Lagoon reporter', function() {
   describe('Test run', function() {
-    it.skip('Should pass a test', function() {
+    it('Should pass a test', function() {
       inspect(true).isTrue();
     });
 
-    it.skip('Should fail a test', function() {
+    it('Should fail a test', function() {
       inspect(false).isTrue();
     });
 
-    it.skip('Should pass as well', function() {
+    it('Should pass as well', function() {
       inspect(false).isFalse();
     });
 
