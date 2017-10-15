@@ -8,6 +8,10 @@ let sortify = require('json.sortify');
 
 let indention = 0;
 
+function escapeString (str) {
+  return str.replace(/(\u001b)/g, '\\u001b')
+}
+
 let stringDiff = function(actual, expected) {
   let str = cf();
 
@@ -19,8 +23,11 @@ let stringDiff = function(actual, expected) {
     expected = sortify(expected, null, '  ');
   }
 
-  let left = fluf(String(actual)).split();
-  let right = fluf(String(expected)).split();
+  let actualEscaped = escapeString(actual);
+  let expectedEscaped = escapeString(expected);
+
+  let left = fluf(String(actualEscaped)).split();
+  let right = fluf(String(expectedEscaped)).split();
 
   let indentLeft = Math.max(left.longestItem(), 20);
   let indentRight = Math.max(right.longestItem(), 20);
