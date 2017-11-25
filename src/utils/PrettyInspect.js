@@ -2,8 +2,16 @@
 
 const TypeInspector = require('type-inspector')
 
+// 🅾🅰🅽🆄🅸🅽🆂
+// ➊➋➌➍➎➏➐➑➒➓⓫⓬⓭⓮⓯⓰⓱⓲⓳⓴
+
 const TYPESET = {
-  'object': 'o',
+  'object': '🅾',
+  'null': '🅾',
+  'array': '🅰',
+  'string': '🆂',
+  'number': '🅽',
+  'undefined': '🆄',
   'unknown': '?'
 }
 
@@ -12,27 +20,33 @@ class PrettyInspect {
     const ts = new TypeInspector({
       toString: this.prettify
     })
+
     const inspected = ts.inspect(val)
-    return this.getDataType(inspected)
+    return inspected
   }
 
   static getDataType (inspected) {
-    const ts = TYPESET[inspected.subType] || TYPESET.unknown
+    console.log('VAL', inspected)
     return `${ts} ${inspected.toString()}`
   }
 
-  static loop (obj) {
-    if (obj.type === 'object' && obj.subType === 'null') {
-      return this.getDataType()
+  static prettify () {
+    const ts = TYPESET[this.subType] || TYPESET.unknown
+
+    if (this.type === 'object') {
+      if (this.subType === 'null') {
+        return `${ts}null`
+      }
+
+      if (this.subType === 'array') {
+        return `${ts}[${this.value.type ? this.value.toString() : ''}]`
+      }
+
+      return `${ts}{${this.value.type ? this.value.toString() : ''}}`
+
     }
 
-    if (obj.type === 'object' && obj.subType === 'array') {
-
-    }
-
-  static prettify (val) {
-    const inspected = this.getDataType(val)
-
+    return `${ts} ${this.value.toString()}`
   }
 }
 
