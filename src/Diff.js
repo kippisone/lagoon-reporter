@@ -10,7 +10,6 @@ class Diff {
   }
 
   jsonDiff (left, right) {
-    const l = 
     if (typeof left !== 'object' || typeof right !== 'object') {
       this.inputError = [typeof left, typeof right]
 
