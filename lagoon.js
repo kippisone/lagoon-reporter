@@ -16,11 +16,19 @@ let stringDiff = function(actual, expected) {
   let str = cf();
 
   if (typeof actual === 'object' && actual !== null) {
-    actual = sortify(actual, null, '  ');
+    if (actual instanceof RegExp) {
+      actual = actual.toString()
+    } else {
+      actual = sortify(actual, null, '  ');
+    }
   }
 
   if (typeof expected === 'object' && expected !== null) {
-    expected = sortify(expected, null, '  ');
+    if (expected instanceof RegExp) {
+      expected = expected.toString()
+    } else {
+      expected = sortify(expected, null, '  ');
+    }
   }
 
   let actualEscaped = escapeString(actual);
