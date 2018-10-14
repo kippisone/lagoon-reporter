@@ -1,6 +1,6 @@
 'use strict';
 
-let cf = require('colorfy');
+let colorfy = require('colorfy');
 let jsdiff = require('diff');
 let fluf = require('fluf');
 let superstorage = require('superstorage');
@@ -13,7 +13,9 @@ function escapeString (str) {
 }
 
 let stringDiff = function(actual, expected) {
-  let str = cf();
+  let str = colorfy({
+    autoJoin: true
+  });
 
   if (typeof actual === 'object' && actual !== null) {
     if (actual instanceof RegExp) {
@@ -79,7 +81,9 @@ let stringDiff = function(actual, expected) {
 }
 
 let oneToMultiDiff = function(actual, expected) {
-  let str = cf();
+  let str = colorfy({
+    autoJoin: true
+  });
 
   actual = actual.map(item => {
     if (typeof item === 'object' && item !== null) {
@@ -170,7 +174,9 @@ let humanize = function(hrtime) {
 
 let highlightErrorMessage = function(err)  {
   let msg = fluf(err.stack || err.message || String(err)).split();
-  let str = cf();
+  let str = colorfy({
+    autoJoin: true
+  });
 
   let errorMsg = msg.__items.shift();
   str.red(errorMsg).txt('\n');
@@ -198,8 +204,12 @@ function LagoonReporter(runner) {
   let testStart;
   let suiteStart;
 
+  const cf = colorfy({
+    autoJoin: true
+  });
+
   runner.on('start', () => {
-    cf(indent()).grey('Start test runner').print();
+    cf.txt(indent()).grey('Start test runner').print();
     suiteStart = process.hrtime();
   });
 
@@ -209,7 +219,7 @@ function LagoonReporter(runner) {
     }
 
     ++indention;
-    cf(indent('›')).azure(suite.title, 'bold').print()
+    cf.txt(indent('›')).azure(suite.title, 'bold').print()
   });
 
   runner.on('suite end', function() {
@@ -222,7 +232,7 @@ function LagoonReporter(runner) {
     duration = humanize(duration);
 
     ++passed;
-    let log = cf(indent() + ' ').green('✔').llgrey(test.fullTitle());
+    let log = cf.txt(indent() + ' ').green('✔').llgrey(test.fullTitle());
 
     log.grey('(', 'rtrim');
 
@@ -245,12 +255,12 @@ function LagoonReporter(runner) {
 
   runner.on('pending', function(test) {
     ++skiped;
-    cf(indent() + ' ').azure('⚡').ddgrey(test.fullTitle()).print();
+    cf.txt(indent() + ' ').azure('⚡').ddgrey(test.fullTitle()).print();
   });
 
   runner.on('fail', function(test, err) {
     ++failed;
-    cf(indent() + ' ').red('✘').grey(test.fullTitle()).txt('\n').print();
+    cf.txt(indent() + ' ').red('✘').grey(test.fullTitle()).txt('\n').print();
     highlightErrorMessage(err).print();
 
     let diffStr;
@@ -274,7 +284,9 @@ function LagoonReporter(runner) {
 
   runner.on('end', function() {
     let runtime = process.hrtime(suiteStart);
-    let str = cf();
+    let str = colorfy({
+      autoJoin: true
+    });
     let sharedState = superstorage('inspectjs-shared-state');
 
     str.lgrey('\n \u2702' + ' –'.repeat(33))
