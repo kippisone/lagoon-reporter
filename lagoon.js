@@ -291,8 +291,6 @@ function LagoonReporter(runner) {
     str.llgrey('\n   All tests have been done in').green(humanize(runtime))
       .txt('\n\n')
       .print();
-
-    process.exit(failed);
   });
 }
 
