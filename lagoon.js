@@ -5,14 +5,23 @@ let jsdiff = require('diff');
 let fluf = require('fluf');
 let superstorage = require('superstorage');
 let sortify = require('json.sortify');
+const TypeInspect = require('type-inspect')
 
 let indention = 0;
 
 function escapeString (str) {
-  return str.replace(/(\u001b)/g, '\\u001b')
+  return str.replace(/(\u001b)/g, '\\u001b') // eslint-disable-line no-control-regex
 }
 
-let stringDiff = function(actual, expected) {
+function diff (actual, expected) {
+  const str = colorfy()
+  str.green('expected').txt(' ').red('actual')
+
+  const diff = TypeInspect.diff(actual, expected)
+  return str.colorfy() + '\n\n' + diff.parse()
+}
+
+function stringDiff(actual, expected) {
   let str = colorfy({
     autoJoin: true
   });
@@ -33,8 +42,8 @@ let stringDiff = function(actual, expected) {
     }
   }
 
-  let actualEscaped = escapeString(actual);
-  let expectedEscaped = escapeString(expected);
+  let actualEscaped = escapeString(String(actual));
+  let expectedEscaped = escapeString(String(expected));
 
   let left = fluf(String(actualEscaped)).split();
   let right = fluf(String(expectedEscaped)).split();
@@ -77,7 +86,7 @@ let stringDiff = function(actual, expected) {
     str.nl();
   }
 
-  return str;
+  return str.colorfy();
 }
 
 let oneToMultiDiff = function(actual, expected) {
@@ -270,7 +279,7 @@ function LagoonReporter(runner) {
       }
     }
     else if (err.hasOwnProperty('actual') && err.hasOwnProperty('expected')) {
-      diffStr = stringDiff(err.actual, err.expected).colorfy();
+      diffStr = diff(err.actual, err.expected);
     }
 
     if (diffStr) {
@@ -307,3 +316,5 @@ function LagoonReporter(runner) {
 }
 
 module.exports = LagoonReporter;
+module.exports.stringDiff = stringDiff;
+module.exports.diff = diff;
