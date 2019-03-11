@@ -13,12 +13,84 @@ function escapeString (str) {
   return str.replace(/(\u001b)/g, '\\u001b') // eslint-disable-line no-control-regex
 }
 
-function diff (actual, expected) {
+function diff (expected, actual) {
   const str = colorfy()
   str.green('expected').txt(' ').red('actual')
 
-  const diff = TypeInspect.diff(actual, expected)
+  const diff = TypeInspect.diff(expected, actual)
+
+  if (diff.diffResult.type === 'string') {
+    return textDiff(diff.diffResult)
+  }
+
   return str.colorfy() + '\n\n' + diff.parse()
+}
+
+function textDiff(diff) {
+  const left = fluf(diff.valueAdded || diff.value).split();
+  const right = fluf(diff.valueRemoved || diff.value).split();
+
+  const str = colorfy()
+
+  const indentLeft = Math.max(left.longestItem(), 20);
+  const indentRight = Math.max(right.longestItem(), 20);
+
+  str.green('expected', 'trim').txt(' '.repeat(indentRight - 6), 'trim');
+  str.red('actual', 'trim').txt(' '.repeat(indentLeft - 4), 'trim').nl(2);
+
+  for (let i = 0; i < Math.max(left.length, right.length); i++) {
+    const diff = jsdiff.diffWords(right.get(i, ''), left.get(i, ''));
+    let lineLength = 0;
+
+    diff.forEach(part => {
+      if (part.added) {
+        str.green(replaceHiddenChars(part.value), 'trim');
+        lineLength += part.value.length;
+      }
+      else if (!part.removed) {
+        str.txt(replaceHiddenChars(part.value), 'trim');
+        lineLength += part.value.length;
+      }
+    });
+
+    if (left.length - 1 > i) {
+      str.dgrey('↵')
+      lineLength += 1
+    }
+
+    str.txt(' '.repeat(indentLeft - lineLength + 2), 'trim')
+
+    diff.forEach(part => {
+      if (part.removed) {
+        str.red(replaceHiddenChars(part.value), 'trim');
+        lineLength += part.value.length;
+      }
+      else if (!part.added) {
+        str.txt(replaceHiddenChars(part.value), 'trim');
+        lineLength += part.value.length;
+      }
+    });
+
+    if (right.length - 1 > i) {
+      str.dgrey('↵')
+      lineLength += 1
+    }
+
+    str.nl();
+  }
+
+  return str.colorfy()
+}
+
+function replaceHiddenChars(str) {
+  return str.replace(/\s+$/g, (match) => {
+    return colorfy.dgrey(match
+      .replace(/ /g, '·')
+      .replace(/\t/g, '↹')
+      .replace(/\r/g, '⍇')
+      .replace(/\s/g, '⮽')
+    )
+  })
 }
 
 function stringDiff(actual, expected) {
@@ -279,7 +351,7 @@ function LagoonReporter(runner) {
       }
     }
     else if (err.hasOwnProperty('actual') && err.hasOwnProperty('expected')) {
-      diffStr = diff(err.actual, err.expected);
+      diffStr = diff(err.expected, err.actual);
     }
 
     if (diffStr) {

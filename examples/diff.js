@@ -4,6 +4,7 @@ const diff = require('../').diff
 const tests = [
   [ 'Diff two booleans', true, false ],
   [ 'Diff two strings', 'I like bananas', 'I like pineapples' ],
+  [ 'Diff two strings', 'I like bananas', 'I like\npineapples  ' ],
   [ 'Diff two numbers', 123, 456 ],
   [ 'Diff two objects', { foo: 'foo', bar: 'bar' }, { foo: 'foo', bar: 'bla' } ],
   [ 'Diff two nested objects', { foo: 'foo', bar: 'bar', bla: { one: 1, two: 2, three: 3 } }, { foo: 'foo', bar: 'bla', bla: { one: 1, three: 3, four: 4, two: 2 } } ],
