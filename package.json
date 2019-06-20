@@ -4,8 +4,8 @@
   "description": "Lagoon reporter is a pretty reporter for Mocha",
   "main": "lagoon.js",
   "scripts": {
-    "test": "mocha --reporter ./ tests/*.spec.js",
-    "start": "mocha --reporter ./ ./examples/index.js"
+    "test": "mocha --reporter ./lagoon.js tests/*.spec.js",
+    "start": "mocha --reporter ./lagoon.js ./examples/index.js"
   },
   "author": "Andi Heinkelein <andifeind@noname-media.com>",
   "license": "MIT",
