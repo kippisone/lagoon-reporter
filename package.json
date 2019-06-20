@@ -1,6 +1,6 @@
 {
   "name": "lagoon-reporter",
-  "version": "0.3.4",
+  "version": "0.7.0",
   "description": "Lagoon reporter is a pretty reporter for Mocha",
   "main": "lagoon.js",
   "scripts": {
@@ -18,7 +18,8 @@
     "fluf": "0.2.0",
     "inspect.js": "^1.11.8",
     "json.sortify": "^2.2.2",
-    "superstorage": "0.1.1"
+    "superstorage": "0.1.1",
+    "type-inspect": "^1.3.0"
   },
   "devDependencies": {
     "mocha": "^6.1.4"

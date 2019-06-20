@@ -1,30 +1,121 @@
 'use strict';
 
-let cf = require('colorfy');
+let colorfy = require('colorfy');
 let jsdiff = require('diff');
 let fluf = require('fluf');
 let superstorage = require('superstorage');
 let sortify = require('json.sortify');
+const TypeInspect = require('type-inspect')
 
 let indention = 0;
 
 function escapeString (str) {
-  return str.replace(/(\u001b)/g, '\\u001b')
+  return str.replace(/(\u001b)/g, '\\u001b') // eslint-disable-line no-control-regex
 }
 
-let stringDiff = function(actual, expected) {
-  let str = cf();
+function diff (expected, actual) {
+  const str = colorfy()
+  str.green('expected').txt(' ').red('actual')
+
+  const diff = TypeInspect.diff(expected, actual)
+
+  if (diff.diffResult.type === 'string') {
+    return textDiff(diff.diffResult)
+  }
+
+  return str.colorfy() + '\n\n' + diff.parse()
+}
+
+function textDiff(diff) {
+  const left = fluf(diff.valueAdded || diff.value).split();
+  const right = fluf(diff.valueRemoved || diff.value).split();
+
+  const str = colorfy()
+
+  const indentLeft = Math.max(left.longestItem(), 20);
+  const indentRight = Math.max(right.longestItem(), 20);
+
+  str.green('expected', 'trim').txt(' '.repeat(indentRight - 6), 'trim');
+  str.red('actual', 'trim').txt(' '.repeat(indentLeft - 4), 'trim').nl(2);
+
+  for (let i = 0; i < Math.max(left.length, right.length); i++) {
+    const diff = jsdiff.diffWords(right.get(i, ''), left.get(i, ''));
+    let lineLength = 0;
+
+    diff.forEach(part => {
+      if (part.added) {
+        str.green(replaceHiddenChars(part.value), 'trim');
+        lineLength += part.value.length;
+      }
+      else if (!part.removed) {
+        str.txt(replaceHiddenChars(part.value), 'trim');
+        lineLength += part.value.length;
+      }
+    });
+
+    if (left.length - 1 > i) {
+      str.dgrey('↵')
+      lineLength += 1
+    }
+
+    str.txt(' '.repeat(indentLeft - lineLength + 2), 'trim')
+
+    diff.forEach(part => {
+      if (part.removed) {
+        str.red(replaceHiddenChars(part.value), 'trim');
+        lineLength += part.value.length;
+      }
+      else if (!part.added) {
+        str.txt(replaceHiddenChars(part.value), 'trim');
+        lineLength += part.value.length;
+      }
+    });
+
+    if (right.length - 1 > i) {
+      str.dgrey('↵')
+      lineLength += 1
+    }
+
+    str.nl();
+  }
+
+  return str.colorfy()
+}
+
+function replaceHiddenChars(str) {
+  return str.replace(/\s+$/g, (match) => {
+    return colorfy.dgrey(match
+      .replace(/ /g, '·')
+      .replace(/\t/g, '↹')
+      .replace(/\r/g, '⍇')
+      .replace(/\s/g, '⮽')
+    )
+  })
+}
+
+function stringDiff(actual, expected) {
+  let str = colorfy({
+    autoJoin: true
+  });
 
   if (typeof actual === 'object' && actual !== null) {
-    actual = sortify(actual, null, '  ');
+    if (actual instanceof RegExp) {
+      actual = actual.toString()
+    } else {
+      actual = sortify(actual, null, '  ');
+    }
   }
 
   if (typeof expected === 'object' && expected !== null) {
-    expected = sortify(expected, null, '  ');
+    if (expected instanceof RegExp) {
+      expected = expected.toString()
+    } else {
+      expected = sortify(expected, null, '  ');
+    }
   }
 
-  let actualEscaped = escapeString(actual);
-  let expectedEscaped = escapeString(expected);
+  let actualEscaped = escapeString(String(actual));
+  let expectedEscaped = escapeString(String(expected));
 
   let left = fluf(String(actualEscaped)).split();
   let right = fluf(String(expectedEscaped)).split();
@@ -67,11 +158,13 @@ let stringDiff = function(actual, expected) {
     str.nl();
   }
 
-  return str;
+  return str.colorfy();
 }
 
 let oneToMultiDiff = function(actual, expected) {
-  let str = cf();
+  let str = colorfy({
+    autoJoin: true
+  });
 
   actual = actual.map(item => {
     if (typeof item === 'object' && item !== null) {
@@ -162,7 +255,9 @@ let humanize = function(hrtime) {
 
 let highlightErrorMessage = function(err)  {
   let msg = fluf(err.stack || err.message || String(err)).split();
-  let str = cf();
+  let str = colorfy({
+    autoJoin: true
+  });
 
   let errorMsg = msg.__items.shift();
   str.red(errorMsg).txt('\n');
@@ -190,8 +285,12 @@ function LagoonReporter(runner) {
   let testStart;
   let suiteStart;
 
+  const cf = colorfy({
+    autoJoin: true
+  });
+
   runner.on('start', () => {
-    cf(indent()).grey('Start test runner').print();
+    cf.txt(indent()).grey('Start test runner').print();
     suiteStart = process.hrtime();
   });
 
@@ -201,7 +300,7 @@ function LagoonReporter(runner) {
     }
 
     ++indention;
-    cf(indent('›')).azure(suite.title, 'bold').print()
+    cf.txt(indent('›')).azure(suite.title, 'bold').print()
   });
 
   runner.on('suite end', function() {
@@ -214,7 +313,7 @@ function LagoonReporter(runner) {
     duration = humanize(duration);
 
     ++passed;
-    let log = cf(indent() + ' ').green('✔').llgrey(test.fullTitle());
+    let log = cf.txt(indent() + ' ').green('✔').llgrey(test.fullTitle());
 
     log.grey('(', 'rtrim');
 
@@ -237,12 +336,12 @@ function LagoonReporter(runner) {
 
   runner.on('pending', function(test) {
     ++skiped;
-    cf(indent() + ' ').azure('⚡').ddgrey(test.fullTitle()).print();
+    cf.txt(indent() + ' ').azure('⚡').ddgrey(test.fullTitle()).print();
   });
 
   runner.on('fail', function(test, err) {
     ++failed;
-    cf(indent() + ' ').red('✘').grey(test.fullTitle()).txt('\n').print();
+    cf.txt(indent() + ' ').red('✘').grey(test.fullTitle()).txt('\n').print();
     highlightErrorMessage(err).print();
 
     let diffStr;
@@ -252,7 +351,7 @@ function LagoonReporter(runner) {
       }
     }
     else if (err.hasOwnProperty('actual') && err.hasOwnProperty('expected')) {
-      diffStr = stringDiff(err.actual, err.expected).colorfy();
+      diffStr = diff(err.expected, err.actual);
     }
 
     if (diffStr) {
@@ -266,7 +365,9 @@ function LagoonReporter(runner) {
 
   runner.on('end', function() {
     let runtime = process.hrtime(suiteStart);
-    let str = cf();
+    let str = colorfy({
+      autoJoin: true
+    });
     let sharedState = superstorage('inspectjs-shared-state');
 
     str.lgrey('\n \u2702' + ' –'.repeat(33))
@@ -283,9 +384,9 @@ function LagoonReporter(runner) {
     str.llgrey('\n   All tests have been done in').green(humanize(runtime))
       .txt('\n\n')
       .print();
-
-    process.exit(failed);
   });
 }
 
 module.exports = LagoonReporter;
+module.exports.stringDiff = stringDiff;
+module.exports.diff = diff;
