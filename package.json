@@ -19,7 +19,7 @@
     "inspect.js": "^1.11.8",
     "json.sortify": "^2.2.2",
     "superstorage": "0.1.1",
-    "type-inspect": "^1.4.0"
+    "type-inspect": "^1.4.2"
   },
   "devDependencies": {
     "mocha": "^6.1.4"
