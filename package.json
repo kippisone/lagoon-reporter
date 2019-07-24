@@ -19,10 +19,10 @@
     "inspect.js": "^1.11.8",
     "json.sortify": "^2.2.2",
     "superstorage": "0.1.1",
-    "type-inspect": "^1.4.3"
+    "type-inspect": "^1.4.4"
   },
   "devDependencies": {
-    "mocha": "^6.1.4"
+    "mocha": "^6.2.0"
   },
   "repository": {
     "type": "git",
